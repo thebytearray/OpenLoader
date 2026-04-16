@@ -1,0 +1,12 @@
+OpenLoader helps you install APK files outside the Play Store using either <strong>Shizuku</strong> (when you have granted access through the Shizuku companion app) or <strong>wireless ADB</strong> pairing.
+
+<strong>Features</strong>
+<ul>
+<li>Install queue for multiple APKs</li>
+<li>Persisted install history across restarts</li>
+<li>Material 3 UI with optional dynamic colors on Android 12+</li>
+<li>Light, dark, system, and AMOLED-friendly themes</li>
+<li>Choose a default install method in settings</li>
+</ul>
+
+OpenLoader is free software under the GNU General Public License v3.0.

@@ -1,0 +1,63 @@
+# Gradle
+# Ignored paths must not be in the index: if build/ was ever committed, remove with
+#   git ls-files | grep -E '/build/|^build/' | xargs git rm --cached -f
+.gradle/
+build/
+**/build/
+
+# AS/Gradle export output next to the app module (not src/release source sets)
+app/release/
+
+# Local SDK paths, API keys, machine overrides (never commit)
+local.properties
+keystore.properties
+signing.properties
+secrets.properties
+
+.idea/*
+!.idea/icon.png
+*.iml
+
+# Kotlin
+.kotlin/
+
+# Android / native
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+*.ap_
+*.dex
+captures/
+
+# Java / outputs
+*.class
+bin/
+out/
+gen/
+
+# Logs & profiling
+*.log
+*.hprof
+
+# Local env / secrets (commit *.example templates if you use them)
+.env
+.env.local
+
+# OS & editors
+.DS_Store
+Thumbs.db
+*~
+*.swp
+*.swo
+*.orig
+
+# Signing material (never commit release keys)
+*.jks
+*.keystore
+
+# Fastlane (if added later)
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/
+fastlane/test_output/

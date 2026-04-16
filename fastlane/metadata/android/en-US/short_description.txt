@@ -1,0 +1,1 @@
+Sideload APKs with Shizuku or wireless ADB: queue, history, Material theming.

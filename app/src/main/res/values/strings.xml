@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">OpenLoader</string>
+
+    <!-- Notifications -->
+    <string name="pairing_notification_title">Enter Pairing Code</string>
+    <string name="pairing_notification_text">Enter the pairing code shown in Developer Options</string>
+    <string name="pairing_notification_big_text">1. Open Settings → Developer Options → Wireless Debugging\n2. Tap \'Pair device with pairing code\'\n3. Enter only the pairing code below (port is auto-detected)\n\nExample: 123456</string>
+    <string name="pairing_reply_label">Pairing Code</string>
+    <string name="pairing_reply_action">Reply</string>
+    <string name="pairing_progress">Pairing…</string>
+    <string name="pairing_progress_detecting_port">Finding pairing port…</string>
+    <string name="pairing_progress_pairing_with_device">Pairing with device…</string>
+    <string name="pairing_success">Pairing Successful!</string>
+    <string name="pairing_success_text">Device paired successfully</string>
+    <string name="pairing_failed">Pairing Failed</string>
+
+    <!-- Errors -->
+    <string name="error_invalid_format">Invalid pairing code. Enter only the code shown in Developer Options.</string>
+    <string name="error_invalid_port">Could not detect ADB port. Make sure Wireless Debugging is enabled.</string>
+    <string name="settings_wireless_debugging_open_failed">Could not open settings</string>
+</resources>

@@ -1,0 +1,1 @@
+Initial release on F-Droid. Install APKs via Shizuku or wireless ADB, with an install queue, persisted history, and Material 3 theming including dynamic color on Android 12+.
