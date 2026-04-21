@@ -1,6 +1,9 @@
+@file:OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+
 package org.thebytearray.app.android.openloader.feature.installer.impl.ui.settings
 
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -21,18 +24,20 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemColors
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -44,13 +49,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.materialkolor.palettes.CorePalette
+import org.thebytearray.app.android.openloader.core.designsystem.component.OlTopAppBar
 import org.thebytearray.app.android.openloader.core.designsystem.icon.OpenLoaderIcons
 import org.thebytearray.app.android.openloader.core.model.InstallMode
 import org.thebytearray.app.android.openloader.core.model.ThemeColor
@@ -58,45 +63,53 @@ import org.thebytearray.app.android.openloader.core.model.ThemeMode
 import org.thebytearray.app.android.openloader.core.ui.toComposeColor
 import org.thebytearray.app.android.openloader.feature.installer.impl.R
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel(),
-    onNavigateBack: () -> Unit = {}
+    onNavigateBack: () -> Unit = {},
+    onNavigateToAbout: () -> Unit = {},
 ) {
     val themeMode by viewModel.themeMode.collectAsStateWithLifecycle()
     val dynamicColor by viewModel.dynamicColor.collectAsStateWithLifecycle()
     val themeColor by viewModel.themeColor.collectAsStateWithLifecycle()
+    val installMode by viewModel.installMode.collectAsStateWithLifecycle()
     var showThemeDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.settings_title)) },
+            OlTopAppBar(
+                title = stringResource(R.string.settings_title),
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(OpenLoaderIcons.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            imageVector = OpenLoaderIcons.ArrowBack,
+                            contentDescription = stringResource(R.string.action_back),
+                        )
                     }
-                }
+                },
             )
         }
-    ) { padding ->
+    ) { innerPadding ->
+        val segmentedColors = ListItemDefaults.colors(
+            containerColor = colorScheme.surfaceContainer,
+        )
+
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding),
-            verticalArrangement = Arrangement.spacedBy(0.dp)
+                .padding(innerPadding),
+            verticalArrangement = Arrangement.spacedBy(0.dp),
         ) {
             item {
                 SettingsSectionHeader(title = stringResource(R.string.settings_appearance))
             }
 
             item {
-                val context = LocalContext.current
-                val appearanceItemCount = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) 2 else 1
+                val appearanceItemCount =
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) 2 else 1
                 Column(
                     modifier = Modifier.padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                    verticalArrangement = Arrangement.spacedBy(ListItemDefaults.SegmentedGap),
                 ) {
                     SegmentedSettingsItem(
                         title = stringResource(R.string.settings_theme),
@@ -114,7 +127,8 @@ fun SettingsScreen(
                         },
                         index = 0,
                         count = appearanceItemCount,
-                        onClick = { showThemeDialog = true }
+                        colors = segmentedColors,
+                        onClick = { showThemeDialog = true },
                     )
 
                     if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
@@ -126,7 +140,8 @@ fun SettingsScreen(
                             onCheckedChange = { viewModel.setDynamicColor(it) },
                             index = 1,
                             count = appearanceItemCount,
-                            enabled = themeMode != ThemeMode.AMOLED
+                            colors = segmentedColors,
+                            enabled = themeMode != ThemeMode.AMOLED,
                         )
                     }
                 }
@@ -145,7 +160,7 @@ fun SettingsScreen(
                         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
                             viewModel.setDynamicColor(false)
                         }
-                    }
+                    },
                 )
             }
 
@@ -154,10 +169,9 @@ fun SettingsScreen(
             }
 
             item {
-                val installMode by viewModel.installMode.collectAsStateWithLifecycle()
                 Column(
                     modifier = Modifier.padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                    verticalArrangement = Arrangement.spacedBy(ListItemDefaults.SegmentedGap),
                 ) {
                     SegmentedSettingsItem(
                         title = stringResource(R.string.settings_default_method),
@@ -168,17 +182,39 @@ fun SettingsScreen(
                         icon = OpenLoaderIcons.SettingsOutlined,
                         index = 0,
                         count = 1,
+                        colors = segmentedColors,
                         onClick = {
                             viewModel.setInstallMode(
-                                if (installMode == InstallMode.SHIZUKU)
-                                    InstallMode.WIRELESS_ADB
-                                else
-                                    InstallMode.SHIZUKU
+                                if (installMode == InstallMode.SHIZUKU) InstallMode.WIRELESS_ADB
+                                else InstallMode.SHIZUKU
                             )
-                        }
+                        },
                     )
                 }
             }
+
+            item {
+                SettingsSectionHeader(title = stringResource(R.string.about_title))
+            }
+
+            item {
+                Column(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(ListItemDefaults.SegmentedGap),
+                ) {
+                    SegmentedSettingsItem(
+                        title = stringResource(R.string.about_title),
+                        description = stringResource(R.string.about_open_source),
+                        icon = OpenLoaderIcons.Android,
+                        index = 0,
+                        count = 1,
+                        colors = segmentedColors,
+                        onClick = onNavigateToAbout,
+                    )
+                }
+            }
+
+            item { Spacer(modifier = Modifier.size(16.dp)) }
         }
 
         if (showThemeDialog) {
@@ -188,7 +224,7 @@ fun SettingsScreen(
                     viewModel.setThemeMode(it)
                     showThemeDialog = false
                 },
-                onDismiss = { showThemeDialog = false }
+                onDismiss = { showThemeDialog = false },
             )
         }
     }
@@ -198,13 +234,12 @@ fun SettingsScreen(
 private fun SettingsSectionHeader(title: String) {
     Text(
         text = title,
-        style = MaterialTheme.typography.labelLarge,
-        color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+        style = MaterialTheme.typography.labelMedium,
+        color = colorScheme.primary,
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SegmentedSettingsItem(
     title: String,
@@ -212,36 +247,41 @@ private fun SegmentedSettingsItem(
     icon: ImageVector,
     index: Int,
     count: Int,
+    colors: ListItemColors,
     onClick: () -> Unit,
+    trailingContent: (@Composable () -> Unit)? = null,
 ) {
-    val shape = when {
-        count == 1 -> RoundedCornerShape(16.dp)
-        index == 0 -> RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp, bottomStart = 4.dp, bottomEnd = 4.dp)
-        index == count - 1 -> RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomStart = 16.dp, bottomEnd = 16.dp)
-        else -> RoundedCornerShape(4.dp)
-    }
-
-    ListItem(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(shape)
-            .clickable(onClick = onClick),
-        colors = ListItemDefaults.colors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer
-        ),
+    SegmentedListItem(
+        checked = false,
+        onCheckedChange = { onClick() },
+        colors = colors,
+        shapes = ListItemDefaults.segmentedShapes(index = index, count = count),
+        modifier = Modifier.clickable(onClick = onClick),
         leadingContent = {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                tint = colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(20.dp),
             )
         },
-        headlineContent = { Text(title) },
-        supportingContent = { Text(description) }
+        trailingContent = trailingContent ?: {},
+        supportingContent = {
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodySmall,
+                maxLines = 1,
+            )
+        },
+        content = {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyMedium,
+            )
+        },
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SegmentedSwitchItem(
     title: String,
@@ -251,49 +291,47 @@ private fun SegmentedSwitchItem(
     onCheckedChange: (Boolean) -> Unit,
     index: Int,
     count: Int,
-    enabled: Boolean = true
+    colors: ListItemColors,
+    enabled: Boolean = true,
 ) {
-    val shape = when {
-        count == 1 -> RoundedCornerShape(16.dp)
-        index == 0 -> RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp, bottomStart = 4.dp, bottomEnd = 4.dp)
-        index == count - 1 -> RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomStart = 16.dp, bottomEnd = 16.dp)
-        else -> RoundedCornerShape(4.dp)
-    }
-
-    ListItem(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(shape)
-            .clickable(enabled = enabled) { onCheckedChange(!isChecked) },
-        colors = ListItemDefaults.colors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer
-        ),
+    SegmentedListItem(
+        checked = isChecked,
+        onCheckedChange = if (enabled) onCheckedChange else { _ -> },
+        colors = colors,
+        shapes = ListItemDefaults.segmentedShapes(index = index, count = count),
+        modifier = Modifier.clickable(enabled = enabled) { onCheckedChange(!isChecked) },
         leadingContent = {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
-            )
-        },
-        headlineContent = {
-            Text(
-                text = title,
-                color = if (enabled) Color.Unspecified else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-            )
-        },
-        supportingContent = {
-            Text(
-                text = description,
-                color = if (enabled) Color.Unspecified else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
+                tint = if (enabled) colorScheme.onSurfaceVariant
+                else colorScheme.onSurfaceVariant.copy(alpha = 0.38f),
+                modifier = Modifier.size(20.dp),
             )
         },
         trailingContent = {
             Switch(
                 checked = isChecked,
                 onCheckedChange = if (enabled) onCheckedChange else { _ -> },
-                enabled = enabled
+                enabled = enabled,
             )
-        }
+        },
+        supportingContent = {
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodySmall,
+                color = if (enabled) Color.Unspecified
+                else colorScheme.onSurfaceVariant.copy(alpha = 0.38f),
+            )
+        },
+        content = {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (enabled) Color.Unspecified
+                else colorScheme.onSurface.copy(alpha = 0.38f),
+            )
+        },
     )
 }
 
@@ -301,35 +339,35 @@ private fun SegmentedSwitchItem(
 private fun ColorPaletteSelector(
     selectedColor: ThemeColor,
     isDynamicColor: Boolean,
-    onColorSelected: (ThemeColor) -> Unit
+    onColorSelected: (ThemeColor) -> Unit,
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = 16.dp),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             ThemeColor.entries.take(4).forEach { color ->
                 ColorPaletteItem(
                     color = color.toComposeColor().toArgb(),
                     isSelected = !isDynamicColor && selectedColor == color,
-                    onSelected = { onColorSelected(color) }
+                    onSelected = { onColorSelected(color) },
                 )
             }
         }
         Spacer(modifier = Modifier.size(8.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             ThemeColor.entries.drop(4).forEach { color ->
                 ColorPaletteItem(
                     color = color.toComposeColor().toArgb(),
                     isSelected = !isDynamicColor && selectedColor == color,
-                    onSelected = { onColorSelected(color) }
+                    onSelected = { onColorSelected(color) },
                 )
             }
         }
@@ -340,61 +378,62 @@ private fun ColorPaletteSelector(
 private fun RowScope.ColorPaletteItem(
     color: Int,
     isSelected: Boolean,
-    onSelected: () -> Unit
+    onSelected: () -> Unit,
 ) {
     val corePalette = remember(color) { CorePalette.of(color) }
     val animatedCheckSize by animateDpAsState(
         targetValue = if (isSelected) 28.dp else 0.dp,
-        label = "checkSize"
+        label = "checkSize",
     )
     val animatedIconSize by animateDpAsState(
         targetValue = if (isSelected) 16.dp else 0.dp,
-        label = "iconSize"
+        label = "iconSize",
     )
 
     Surface(
         onClick = onSelected,
         shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.surfaceContainer,
+        color = colorScheme.surfaceContainer,
+        border = if (isSelected) BorderStroke(2.dp, colorScheme.primary) else null,
         modifier = Modifier
             .weight(1f)
-            .aspectRatio(1f)
+            .aspectRatio(1f),
     ) {
         Box(
             modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             Box(
                 modifier = Modifier
                     .size(48.dp)
                     .clip(CircleShape)
-                    .background(Color(corePalette.a1.tone(80)))
+                    .background(Color(corePalette.a1.tone(80))),
             ) {
                 Box(
                     modifier = Modifier
                         .align(Alignment.BottomStart)
                         .size(24.dp)
-                        .background(Color(corePalette.a2.tone(90)))
+                        .background(Color(corePalette.a2.tone(90))),
                 )
                 Box(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
                         .size(24.dp)
-                        .background(Color(corePalette.a3.tone(60)))
+                        .background(Color(corePalette.a3.tone(60))),
                 )
                 if (isSelected) {
                     Box(
                         modifier = Modifier
                             .size(animatedCheckSize)
                             .align(Alignment.Center)
-                            .background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
-                        contentAlignment = Alignment.Center
+                            .background(colorScheme.primaryContainer, CircleShape),
+                        contentAlignment = Alignment.Center,
                     ) {
                         Icon(
                             imageVector = OpenLoaderIcons.Check,
                             contentDescription = null,
                             modifier = Modifier.size(animatedIconSize),
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                            tint = colorScheme.onPrimaryContainer,
                         )
                     }
                 }
@@ -407,7 +446,7 @@ private fun RowScope.ColorPaletteItem(
 private fun ThemeSelectionDialog(
     currentTheme: ThemeMode,
     onThemeSelected: (ThemeMode) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -418,25 +457,25 @@ private fun ThemeSelectionDialog(
                     title = stringResource(R.string.theme_system),
                     icon = OpenLoaderIcons.SettingsBrightness,
                     isSelected = currentTheme == ThemeMode.SYSTEM,
-                    onClick = { onThemeSelected(ThemeMode.SYSTEM) }
+                    onClick = { onThemeSelected(ThemeMode.SYSTEM) },
                 )
                 ThemeOption(
                     title = stringResource(R.string.theme_light),
                     icon = OpenLoaderIcons.LightMode,
                     isSelected = currentTheme == ThemeMode.LIGHT,
-                    onClick = { onThemeSelected(ThemeMode.LIGHT) }
+                    onClick = { onThemeSelected(ThemeMode.LIGHT) },
                 )
                 ThemeOption(
                     title = stringResource(R.string.theme_dark),
                     icon = OpenLoaderIcons.DarkMode,
                     isSelected = currentTheme == ThemeMode.DARK,
-                    onClick = { onThemeSelected(ThemeMode.DARK) }
+                    onClick = { onThemeSelected(ThemeMode.DARK) },
                 )
                 ThemeOption(
                     title = stringResource(R.string.theme_amoled),
                     icon = OpenLoaderIcons.Contrast,
                     isSelected = currentTheme == ThemeMode.AMOLED,
-                    onClick = { onThemeSelected(ThemeMode.AMOLED) }
+                    onClick = { onThemeSelected(ThemeMode.AMOLED) },
                 )
             }
         },
@@ -444,7 +483,7 @@ private fun ThemeSelectionDialog(
             TextButton(onClick = onDismiss) {
                 Text(stringResource(R.string.action_cancel))
             }
-        }
+        },
     )
 }
 
@@ -453,7 +492,7 @@ private fun ThemeOption(
     title: String,
     icon: ImageVector,
     isSelected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     Row(
         modifier = Modifier
@@ -461,27 +500,27 @@ private fun ThemeOption(
             .selectable(
                 selected = isSelected,
                 onClick = onClick,
-                role = Role.RadioButton
+                role = Role.RadioButton,
             )
             .padding(vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
             modifier = Modifier.size(24.dp),
-            tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+            tint = if (isSelected) colorScheme.primary else colorScheme.onSurfaceVariant,
         )
         Spacer(modifier = Modifier.size(16.dp))
         Text(
             text = title,
             style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier.weight(1f),
-            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+            color = if (isSelected) colorScheme.primary else colorScheme.onSurface,
         )
         RadioButton(
             selected = isSelected,
-            onClick = null
+            onClick = null,
         )
     }
 }

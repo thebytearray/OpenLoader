@@ -1,62 +1,123 @@
+@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
+
 package org.thebytearray.app.android.openloader.core.designsystem.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
-import androidx.compose.material3.lightColorScheme
+import androidx.compose.material3.expressiveLightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import com.materialkolor.rememberDynamicColorScheme
 
 @Composable
-private fun createAmoledColorScheme(seedColor: Color): ColorScheme {
-    val baseScheme = rememberDynamicColorScheme(
-        seedColor = seedColor, isDark = true, isAmoled = true
+private fun expressiveLightSchemeFromSeed(seedColor: Color): ColorScheme {
+    val base = rememberDynamicColorScheme(
+        seedColor = seedColor,
+        isDark = false,
+        isAmoled = false,
     )
-
-    return darkColorScheme(
-        primary = baseScheme.primary,
-        onPrimary = baseScheme.onPrimary,
-        primaryContainer = baseScheme.primaryContainer,
-        onPrimaryContainer = baseScheme.onPrimaryContainer,
-        secondary = baseScheme.secondary,
-        onSecondary = baseScheme.onSecondary,
-        secondaryContainer = baseScheme.secondaryContainer,
-        onSecondaryContainer = baseScheme.onSecondaryContainer,
-        tertiary = baseScheme.tertiary,
-        onTertiary = baseScheme.onTertiary,
-        tertiaryContainer = baseScheme.tertiaryContainer,
-        onTertiaryContainer = baseScheme.onTertiaryContainer,
-        error = baseScheme.error,
-        onError = baseScheme.onError,
-        errorContainer = baseScheme.errorContainer,
-        onErrorContainer = baseScheme.onErrorContainer,
-        background = PureBlack,
-        onBackground = baseScheme.onBackground,
-        surface = PureBlack,
-        onSurface = baseScheme.onSurface,
-        surfaceVariant = Color(0xFF1A1A1A),
-        onSurfaceVariant = baseScheme.onSurfaceVariant,
-        outline = baseScheme.outline,
-        outlineVariant = baseScheme.outlineVariant,
-        scrim = baseScheme.scrim,
-        inverseSurface = baseScheme.inverseSurface,
-        inverseOnSurface = baseScheme.inverseOnSurface,
-        inversePrimary = baseScheme.inversePrimary,
-        surfaceDim = PureBlack,
-        surfaceBright = PureBlack,
-        surfaceContainerLowest = PureBlack,
-        surfaceContainerLow = PureBlack,
-        surfaceContainer = PureBlack,
-        surfaceContainerHigh = PureBlack,
-        surfaceContainerHighest = PureBlack,
+    return expressiveLightColorScheme().copy(
+        primary = base.primary,
+        onPrimary = base.onPrimary,
+        primaryContainer = base.primaryContainer,
+        onPrimaryContainer = base.onPrimaryContainer,
+        inversePrimary = base.inversePrimary,
+        secondary = base.secondary,
+        onSecondary = base.onSecondary,
+        secondaryContainer = base.secondaryContainer,
+        onSecondaryContainer = base.onSecondaryContainer,
+        tertiary = base.tertiary,
+        onTertiary = base.onTertiary,
+        tertiaryContainer = base.tertiaryContainer,
+        onTertiaryContainer = base.onTertiaryContainer,
+        background = base.background,
+        onBackground = base.onBackground,
+        surface = base.surface,
+        onSurface = base.onSurface,
+        surfaceVariant = base.surfaceVariant,
+        onSurfaceVariant = base.onSurfaceVariant,
+        surfaceDim = base.surfaceDim,
+        surfaceBright = base.surfaceBright,
+        surfaceContainerLowest = base.surfaceContainerLowest,
+        surfaceContainerLow = base.surfaceContainerLow,
+        surfaceContainer = base.surfaceContainer,
+        surfaceContainerHigh = base.surfaceContainerHigh,
+        surfaceContainerHighest = base.surfaceContainerHighest,
+        inverseSurface = base.inverseSurface,
+        inverseOnSurface = base.inverseOnSurface,
+        outline = base.outline,
+        outlineVariant = base.outlineVariant,
+        error = base.error,
+        onError = base.onError,
+        errorContainer = base.errorContainer,
+        onErrorContainer = base.onErrorContainer,
+        scrim = base.scrim,
     )
 }
+
+@Composable
+private fun expressiveDarkSchemeFromSeed(seedColor: Color): ColorScheme {
+    val base = rememberDynamicColorScheme(
+        seedColor = seedColor,
+        isDark = true,
+        isAmoled = false,
+    )
+    return darkColorScheme(
+        primary = base.primary,
+        onPrimary = base.onPrimary,
+        primaryContainer = base.primaryContainer,
+        onPrimaryContainer = base.onPrimaryContainer,
+        inversePrimary = base.inversePrimary,
+        secondary = base.secondary,
+        onSecondary = base.onSecondary,
+        secondaryContainer = base.secondaryContainer,
+        onSecondaryContainer = base.onSecondaryContainer,
+        tertiary = base.tertiary,
+        onTertiary = base.onTertiary,
+        tertiaryContainer = base.tertiaryContainer,
+        onTertiaryContainer = base.onTertiaryContainer,
+        background = base.background,
+        onBackground = base.onBackground,
+        surface = base.surface,
+        onSurface = base.onSurface,
+        surfaceVariant = base.surfaceVariant,
+        onSurfaceVariant = base.onSurfaceVariant,
+        surfaceDim = base.surfaceDim,
+        surfaceBright = base.surfaceBright,
+        surfaceContainerLowest = base.surfaceContainerLowest,
+        surfaceContainerLow = base.surfaceContainerLow,
+        surfaceContainer = base.surfaceContainer,
+        surfaceContainerHigh = base.surfaceContainerHigh,
+        surfaceContainerHighest = base.surfaceContainerHighest,
+        inverseSurface = base.inverseSurface,
+        inverseOnSurface = base.inverseOnSurface,
+        outline = base.outline,
+        outlineVariant = base.outlineVariant,
+        error = base.error,
+        onError = base.onError,
+        errorContainer = base.errorContainer,
+        onErrorContainer = base.onErrorContainer,
+        scrim = base.scrim,
+    )
+}
+
+private fun ColorScheme.toAmoled(): ColorScheme = copy(
+    background = PureBlack,
+    surface = PureBlack,
+    surfaceDim = PureBlack,
+    surfaceContainerLowest = PureBlack,
+    surfaceContainerLow = surfaceContainerLowest,
+    surfaceContainer = surfaceContainerLow,
+    surfaceContainerHigh = surfaceContainer,
+    surfaceContainerHighest = surfaceContainerHigh,
+)
 
 @Composable
 fun OpenLoaderTheme(
@@ -66,24 +127,18 @@ fun OpenLoaderTheme(
     isAmoled: Boolean = false,
     content: @Composable () -> Unit,
 ) {
-    val colorScheme: ColorScheme = when {
-        isAmoled -> {
-            createAmoledColorScheme(seedColor = seedColor)
-        }
-
+    val context = LocalContext.current
+    val baseScheme: ColorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
-
-        else -> {
-            rememberDynamicColorScheme(
-                seedColor = seedColor, isDark = darkTheme, isAmoled = false
-            )
-        }
+        darkTheme -> expressiveDarkSchemeFromSeed(seedColor)
+        else -> expressiveLightSchemeFromSeed(seedColor)
     }
 
-    MaterialTheme(
+    val colorScheme = if (isAmoled) baseScheme.toAmoled() else baseScheme
+
+    MaterialExpressiveTheme(
         colorScheme = colorScheme,
         typography = AppTypography,
         content = content,

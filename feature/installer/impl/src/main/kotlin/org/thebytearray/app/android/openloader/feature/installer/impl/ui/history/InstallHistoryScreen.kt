@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+
 package org.thebytearray.app.android.openloader.feature.installer.impl.ui.history
 
 import android.graphics.Bitmap
@@ -5,6 +7,7 @@ import android.graphics.drawable.Drawable
 import android.text.format.DateUtils
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,19 +23,17 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -51,10 +52,13 @@ import androidx.compose.ui.unit.dp
 import androidx.core.graphics.createBitmap
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import org.thebytearray.app.android.openloader.feature.installer.impl.R
 import org.thebytearray.app.android.openloader.core.datastore.history.InstallHistoryEntry
+import org.thebytearray.app.android.openloader.core.designsystem.component.OlIconTextButton
+import org.thebytearray.app.android.openloader.core.designsystem.component.OlTopAppBar
 import org.thebytearray.app.android.openloader.core.designsystem.icon.OpenLoaderIcons
+import org.thebytearray.app.android.openloader.core.designsystem.theme.Dimens
 import org.thebytearray.app.android.openloader.feature.installer.impl.InstallerViewModel
+import org.thebytearray.app.android.openloader.feature.installer.impl.R
 
 private fun getInstalledAppDrawable(context: android.content.Context, packageName: String): Drawable? {
     return try {
@@ -74,7 +78,6 @@ private fun Drawable.toBitmap(): Bitmap {
     return bitmap
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InstallHistoryScreen(
     viewModel: InstallerViewModel = hiltViewModel(),
@@ -86,30 +89,35 @@ fun InstallHistoryScreen(
     if (showClearConfirm) {
         AlertDialog(
             onDismissRequest = { showClearConfirm = false },
-            title = { Text(stringResource(R.string.history_clear_dialog_title)) },
+            title = {
+                Text(
+                    text = stringResource(R.string.history_clear_dialog_title),
+                    style = MaterialTheme.typography.titleLargeEmphasized,
+                )
+            },
             text = { Text(stringResource(R.string.history_clear_dialog_message)) },
             confirmButton = {
-                Button(
+                OlIconTextButton(
+                    text = stringResource(R.string.history_clear_confirm),
                     onClick = {
                         viewModel.clearInstallHistory()
                         showClearConfirm = false
                     },
-                ) {
-                    Text(stringResource(R.string.history_clear_confirm))
-                }
+                )
             },
             dismissButton = {
                 TextButton(onClick = { showClearConfirm = false }) {
                     Text(stringResource(R.string.action_cancel))
                 }
             },
+            shape = MaterialTheme.shapes.extraLarge,
         )
     }
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.history_title)) },
+            OlTopAppBar(
+                title = stringResource(R.string.history_title),
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
@@ -120,9 +128,7 @@ fun InstallHistoryScreen(
                 },
                 actions = {
                     if (installHistory.isNotEmpty()) {
-                        IconButton(
-                            onClick = { showClearConfirm = true },
-                        ) {
+                        IconButton(onClick = { showClearConfirm = true }) {
                             Icon(
                                 OpenLoaderIcons.Delete,
                                 contentDescription = stringResource(R.string.history_clear_all_content_description),
@@ -132,29 +138,39 @@ fun InstallHistoryScreen(
                 },
             )
         },
-    ) { padding ->
+    ) { innerPadding ->
         if (installHistory.isEmpty()) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(padding)
-                    .padding(32.dp),
+                    .padding(innerPadding)
+                    .padding(Dimens.paddingHuge),
                 contentAlignment = Alignment.Center,
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(Dimens.paddingLarge),
                 ) {
-                    Icon(
-                        imageVector = OpenLoaderIcons.History,
-                        contentDescription = null,
-                        modifier = Modifier.size(64.dp),
-                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.45f),
-                    )
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .size(96.dp)
+                            .background(
+                                color = MaterialTheme.colorScheme.primaryContainer,
+                                shape = CircleShape,
+                            ),
+                    ) {
+                        Icon(
+                            imageVector = OpenLoaderIcons.History,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.size(48.dp),
+                        )
+                    }
                     Text(
-                        stringResource(R.string.history_empty),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        text = stringResource(R.string.history_empty),
+                        style = MaterialTheme.typography.titleLargeEmphasized,
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
                 }
             }
@@ -162,9 +178,9 @@ fun InstallHistoryScreen(
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(padding),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                    .padding(innerPadding),
+                contentPadding = PaddingValues(Dimens.paddingLarge),
+                verticalArrangement = Arrangement.spacedBy(Dimens.paddingSmall),
             ) {
                 items(
                     items = installHistory,
@@ -191,17 +207,24 @@ private fun InstallHistoryRow(entry: InstallHistoryEntry) {
         ).toString()
     }
 
+    val shape = MaterialTheme.shapes.extraLarge
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f),
+                shape = shape,
+            ),
+        shape = shape,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            containerColor = MaterialTheme.colorScheme.surfaceContainer,
         ),
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .padding(Dimens.paddingLarge),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(
@@ -226,11 +249,11 @@ private fun InstallHistoryRow(entry: InstallHistoryEntry) {
                     )
                 }
             }
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(Dimens.paddingMedium))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = entry.appLabel.ifEmpty { entry.packageName },
-                    style = MaterialTheme.typography.titleSmall,
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Medium,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -244,7 +267,7 @@ private fun InstallHistoryRow(entry: InstallHistoryEntry) {
                 )
                 Text(
                     text = timeLabel,
-                    style = MaterialTheme.typography.labelSmall,
+                    style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 if (!entry.success && entry.resultMessage.isNotBlank()) {
@@ -258,15 +281,30 @@ private fun InstallHistoryRow(entry: InstallHistoryEntry) {
                     )
                 }
             }
-            Text(
-                text = if (entry.success) "✓" else "✗",
-                style = MaterialTheme.typography.titleMedium,
-                color = if (entry.success) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.error
-                },
-            )
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .background(
+                        color = if (entry.success) {
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                        } else {
+                            MaterialTheme.colorScheme.error.copy(alpha = 0.15f)
+                        },
+                        shape = CircleShape,
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = if (entry.success) OpenLoaderIcons.Check else OpenLoaderIcons.Close,
+                    contentDescription = null,
+                    tint = if (entry.success) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.error
+                    },
+                    modifier = Modifier.size(18.dp),
+                )
+            }
         }
     }
 }

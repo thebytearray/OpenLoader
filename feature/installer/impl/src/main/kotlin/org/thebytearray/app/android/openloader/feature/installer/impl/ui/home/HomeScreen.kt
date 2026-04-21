@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+
 package org.thebytearray.app.android.openloader.feature.installer.impl.ui.home
 
 import android.content.pm.PackageManager
@@ -26,24 +28,19 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -69,7 +66,13 @@ import androidx.core.graphics.createBitmap
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
+import org.thebytearray.app.android.openloader.core.designsystem.component.OlFilledTonalIconTextButton
+import org.thebytearray.app.android.openloader.core.designsystem.component.OlHeroAction
+import org.thebytearray.app.android.openloader.core.designsystem.component.OlHeroHeader
+import org.thebytearray.app.android.openloader.core.designsystem.component.OlIconTextButton
+import org.thebytearray.app.android.openloader.core.designsystem.component.OlOutlinedIconTextButton
 import org.thebytearray.app.android.openloader.core.designsystem.icon.OpenLoaderIcons
+import org.thebytearray.app.android.openloader.core.designsystem.theme.Dimens
 import org.thebytearray.app.android.openloader.feature.installer.impl.R
 import org.thebytearray.app.android.openloader.feature.installer.impl.InstallerViewModel
 import org.thebytearray.app.android.openloader.feature.installer.impl.QueueStatus
@@ -148,7 +151,6 @@ private fun Drawable.toBitmap(): Bitmap {
     return bitmap
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     viewModel: InstallerViewModel = hiltViewModel(),
@@ -165,7 +167,7 @@ fun HomeScreen(
     val alreadyConfiguredToastMessage = stringResource(R.string.home_setup_already_configured)
     val lifecycleOwner = LocalLifecycleOwner.current
     val scope = rememberCoroutineScope()
-    
+
     var showSetupDialog by remember { mutableStateOf(false) }
     var showClearDialog by remember { mutableStateOf(false) }
     var isReady by remember { mutableStateOf(false) }
@@ -175,7 +177,15 @@ fun HomeScreen(
         contract = ActivityResultContracts.OpenMultipleDocuments(),
     ) { uris ->
         if (uris.isNotEmpty()) {
-            viewModel.addStagedUris(uris)
+            val result = viewModel.addStagedUris(uris)
+            if (result.skippedDuplicates > 0) {
+                val msg = if (result.skippedDuplicates == 1) {
+                    context.getString(R.string.home_duplicate_skipped, 1)
+                } else {
+                    context.getString(R.string.home_duplicate_skipped_plural, result.skippedDuplicates)
+                }
+                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
@@ -198,154 +208,112 @@ fun HomeScreen(
     }
 
     val hasPendingItems = queue.any { it.status == QueueStatus.Pending }
-    val hasCompletedItems = queue.any { it.status == QueueStatus.Success || it.status == QueueStatus.Failed }
-    val allCompleted = queue.isNotEmpty() && queue.all { it.status == QueueStatus.Success || it.status == QueueStatus.Failed }
     val hasRetriableFailed = queue.any { viewModel.canRetryItem(it) }
+    val allCompleted = queue.isNotEmpty() && queue.all { it.status == QueueStatus.Success || it.status == QueueStatus.Failed }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text(stringResource(R.string.home_title))
-                        if (queue.isNotEmpty()) {
-                            val pendingCount = queue.count { it.status == QueueStatus.Pending }
-                            val completedCount = queue.count { it.status == QueueStatus.Success || it.status == QueueStatus.Failed }
-                            Text(
-                                when {
-                                    installing -> "Installing..."
-                                    allCompleted -> stringResource(R.string.home_queue_finished, completedCount)
-                                    pendingCount > 0 -> "$pendingCount pending"
-                                    else -> "${queue.size} APK${if (queue.size > 1) "s" else ""}"
-                                },
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                    }
-                },
-                actions = {
-                    IconButton(onClick = onNavigateToHistory) {
-                        Icon(
-                            OpenLoaderIcons.History,
-                            contentDescription = stringResource(R.string.history_content_description),
-                        )
-                    }
-                    IconButton(onClick = onNavigateToSettings) {
-                        Icon(OpenLoaderIcons.Settings, contentDescription = "Settings")
-                    }
-                }
-            )
-        },
-        floatingActionButton = {
-        }
-    ) { padding ->
+    Scaffold { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
         ) {
+            OlHeroHeader(
+                title = stringResource(R.string.home_title),
+                subtitle = if (queue.isNotEmpty()) {
+                    val pendingCount = queue.count { it.status == QueueStatus.Pending }
+                    val completedCount = queue.count { it.status == QueueStatus.Success || it.status == QueueStatus.Failed }
+                    when {
+                        installing -> "Installing..."
+                        allCompleted -> stringResource(R.string.home_queue_finished, completedCount)
+                        pendingCount > 0 -> "$pendingCount pending"
+                        else -> "${queue.size} APK${if (queue.size > 1) "s" else ""}"
+                    }
+                } else null,
+                actions = listOf(
+                    OlHeroAction(
+                        icon = OpenLoaderIcons.History,
+                        contentDescription = stringResource(R.string.history_content_description),
+                        onClick = onNavigateToHistory,
+                    ),
+                    OlHeroAction(
+                        icon = OpenLoaderIcons.Settings,
+                        contentDescription = "Settings",
+                        onClick = onNavigateToSettings,
+                    ),
+                ),
+            )
+
             if (installing) {
                 LinearProgressIndicator(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .padding(horizontal = Dimens.paddingLarge)
                         .height(4.dp),
                 )
+                Spacer(modifier = Modifier.height(Dimens.paddingSmall))
             }
 
             AnimatedVisibility(
                 visible = needsSetup && queue.isNotEmpty() && !installing,
                 enter = fadeIn(),
-                exit = fadeOut()
+                exit = fadeOut(),
             ) {
                 SetupWarningCard(
-                    onConfigure = { showSetupDialog = true },
-                    modifier = Modifier.padding(16.dp)
+                    onConfigure = {
+                        scope.launch {
+                            val alreadyReady = viewModel.isInstallMethodReady()
+                            if (alreadyReady) {
+                                Toast.makeText(
+                                    context,
+                                    alreadyConfiguredToastMessage,
+                                    Toast.LENGTH_SHORT,
+                                ).show()
+                            } else {
+                                onNavigateToSetup()
+                            }
+                        }
+                    },
+                    modifier = Modifier.padding(
+                        horizontal = Dimens.paddingLarge,
+                        vertical = Dimens.paddingSmall,
+                    ),
                 )
             }
 
             if (queue.isEmpty()) {
                 EmptyState(
-                    onAddClick = { pickLauncher.launch(arrayOf("application/vnd.android.package-archive")) }
+                    onAddClick = { pickLauncher.launch(arrayOf("application/vnd.android.package-archive")) },
                 )
             } else {
                 Column(modifier = Modifier.fillMaxSize()) {
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                ) {
-                    LazyColumn(
-                        contentPadding = PaddingValues(vertical = 8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.fillMaxSize()
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth()
+                            .padding(horizontal = Dimens.paddingLarge),
                     ) {
-                        items(
-                            items = queue,
-                            key = { it.localPath },
-                        ) { item ->
-                            val canRetry = remember(item.localPath, item.status) {
-                                viewModel.canRetryItem(item)
-                            }
-                            ApkQueueItem(
-                                item = item,
-                                onRemove = {
-                                    if (item.status != QueueStatus.Installing) {
-                                        viewModel.removeFromQueue(item.localPath)
-                                    }
-                                },
-                                onRetry = if (canRetry) {
-                                    {
-                                        viewModel.retryItem(item.localPath)
-                                        scope.launch {
-                                            val ready = viewModel.isInstallMethodReady()
-                                            if (!ready) {
-                                                showSetupDialog = true
-                                            } else {
-                                                viewModel.runInstallQueue()
-                                            }
+                        LazyColumn(
+                            contentPadding = PaddingValues(vertical = Dimens.paddingSmall),
+                            verticalArrangement = Arrangement.spacedBy(Dimens.paddingSmall),
+                            modifier = Modifier.fillMaxSize(),
+                        ) {
+                            items(
+                                items = queue,
+                                key = { it.localPath },
+                            ) { item ->
+                                val canRetry = remember(item.localPath, item.status) {
+                                    viewModel.canRetryItem(item)
+                                }
+                                ApkQueueItem(
+                                    item = item,
+                                    onRemove = {
+                                        if (item.status != QueueStatus.Installing) {
+                                            viewModel.removeFromQueue(item.localPath)
                                         }
-                                    }
-                                } else {
-                                    null
-                                },
-                            )
-                        }
-                    }
-                }
-
-                if (queue.isNotEmpty()) {
-                    Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    when {
-                        installing -> {
-                            OutlinedButton(
-                                onClick = { viewModel.cancelInstallation() },
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Icon(
-                                    imageVector = OpenLoaderIcons.Close,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text("Cancel Installation")
-                            }
-                        }
-                        allCompleted -> {
-                            Column(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalArrangement = Arrangement.spacedBy(8.dp),
-                            ) {
-                                if (hasRetriableFailed) {
-                                    Button(
-                                        onClick = {
-                                            viewModel.retryAllStagedFailed()
+                                    },
+                                    onRetry = if (canRetry) {
+                                        {
+                                            viewModel.retryItem(item.localPath)
                                             scope.launch {
                                                 val ready = viewModel.isInstallMethodReady()
                                                 if (!ready) {
@@ -354,88 +322,106 @@ fun HomeScreen(
                                                     viewModel.runInstallQueue()
                                                 }
                                             }
-                                        },
-                                        modifier = Modifier.fillMaxWidth(),
-                                    ) {
-                                        Icon(
-                                            imageVector = OpenLoaderIcons.Refresh,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(20.dp),
-                                        )
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text(stringResource(R.string.home_retry))
-                                    }
-                                }
-                                Row(
+                                        }
+                                    } else {
+                                        null
+                                    },
+                                )
+                            }
+                        }
+                    }
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(Dimens.paddingLarge),
+                        verticalArrangement = Arrangement.spacedBy(Dimens.paddingSmall),
+                    ) {
+                        when {
+                            installing -> {
+                                OlOutlinedIconTextButton(
+                                    text = "Cancel Installation",
+                                    icon = OpenLoaderIcons.Close,
+                                    onClick = { viewModel.cancelInstallation() },
                                     modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                )
+                            }
+                            allCompleted -> {
+                                Column(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalArrangement = Arrangement.spacedBy(Dimens.paddingSmall),
                                 ) {
-                                    FilledTonalButton(
-                                        onClick = { viewModel.clearQueue() },
-                                        modifier = Modifier.weight(1f),
-                                    ) {
-                                        Icon(
-                                            imageVector = OpenLoaderIcons.Clear,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(20.dp),
+                                    if (hasRetriableFailed) {
+                                        OlIconTextButton(
+                                            text = stringResource(R.string.home_retry),
+                                            icon = OpenLoaderIcons.Refresh,
+                                            onClick = {
+                                                viewModel.retryAllStagedFailed()
+                                                scope.launch {
+                                                    val ready = viewModel.isInstallMethodReady()
+                                                    if (!ready) {
+                                                        showSetupDialog = true
+                                                    } else {
+                                                        viewModel.runInstallQueue()
+                                                    }
+                                                }
+                                            },
+                                            modifier = Modifier.fillMaxWidth(),
                                         )
-                                        Spacer(modifier = Modifier.width(4.dp))
-                                        Text(stringResource(R.string.action_clear))
                                     }
-                                    Button(
-                                        onClick = {
-                                            pickLauncher.launch(
-                                                arrayOf("application/vnd.android.package-archive"),
-                                            )
-                                        },
-                                        modifier = Modifier.weight(2f),
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(Dimens.paddingSmall),
                                     ) {
-                                        Icon(
-                                            imageVector = OpenLoaderIcons.Add,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(20.dp),
+                                        OlFilledTonalIconTextButton(
+                                            text = stringResource(R.string.action_clear),
+                                            icon = OpenLoaderIcons.Clear,
+                                            onClick = { viewModel.clearQueue() },
+                                            modifier = Modifier.weight(1f),
                                         )
-                                        Spacer(modifier = Modifier.width(4.dp))
-                                        Text("Install More")
+                                        OlIconTextButton(
+                                            text = "Install More",
+                                            icon = OpenLoaderIcons.Add,
+                                            onClick = {
+                                                pickLauncher.launch(
+                                                    arrayOf("application/vnd.android.package-archive"),
+                                                )
+                                            },
+                                            modifier = Modifier.weight(2f),
+                                        )
                                     }
                                 }
                             }
-                        }
-                        hasPendingItems -> {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                FilledTonalButton(
-                                    onClick = { pickLauncher.launch(arrayOf("application/vnd.android.package-archive")) },
-                                    modifier = Modifier.weight(1f)
+                            hasPendingItems -> {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(Dimens.paddingSmall),
                                 ) {
-                                    Icon(
-                                        imageVector = OpenLoaderIcons.Add,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(20.dp)
+                                    OlFilledTonalIconTextButton(
+                                        text = "Add",
+                                        icon = OpenLoaderIcons.Add,
+                                        onClick = {
+                                            pickLauncher.launch(arrayOf("application/vnd.android.package-archive"))
+                                        },
+                                        modifier = Modifier.weight(1f),
                                     )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text("Add")
-                                }
-                                Button(
-                                    onClick = {
-                                        if (needsSetup) {
-                                            showSetupDialog = true
-                                        } else {
-                                            viewModel.runInstallQueue()
-                                        }
-                                    },
-                                    enabled = !installing,
-                                    modifier = Modifier.weight(2f)
-                                ) {
-                                    Text("Install ${queue.count { it.status == QueueStatus.Pending }} APK${if (queue.count { it.status == QueueStatus.Pending } > 1) "s" else ""}")
+                                    val pendingCount = queue.count { it.status == QueueStatus.Pending }
+                                    OlIconTextButton(
+                                        text = "Install $pendingCount APK${if (pendingCount > 1) "s" else ""}",
+                                        onClick = {
+                                            if (needsSetup) {
+                                                showSetupDialog = true
+                                            } else {
+                                                viewModel.runInstallQueue()
+                                            }
+                                        },
+                                        enabled = !installing,
+                                        modifier = Modifier.weight(2f),
+                                    )
                                 }
                             }
                         }
                     }
-                }
-                }
                 }
             }
         }
@@ -468,20 +454,20 @@ fun HomeScreen(
             title = { Text("Clear Queue") },
             text = { Text("Remove all ${queue.size} APK${if (queue.size > 1) "s" else ""} from the queue?") },
             confirmButton = {
-                Button(
+                OlIconTextButton(
+                    text = "Clear",
                     onClick = {
                         viewModel.clearQueue()
                         showClearDialog = false
-                    }
-                ) {
-                    Text("Clear")
-                }
+                    },
+                )
             },
             dismissButton = {
                 TextButton(onClick = { showClearDialog = false }) {
                     Text("Cancel")
                 }
-            }
+            },
+            shape = MaterialTheme.shapes.extraLarge,
         )
     }
 }
@@ -489,78 +475,96 @@ fun HomeScreen(
 @Composable
 private fun SetupWarningCard(
     onConfigure: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.errorContainer
+            containerColor = MaterialTheme.colorScheme.errorContainer,
+            contentColor = MaterialTheme.colorScheme.onErrorContainer,
         ),
-        shape = RoundedCornerShape(16.dp)
+        shape = MaterialTheme.shapes.large,
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(horizontal = Dimens.paddingLarge, vertical = Dimens.paddingMedium),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(
-                imageVector = OpenLoaderIcons.Warning,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onErrorContainer
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = stringResource(R.string.home_setup_required),
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onErrorContainer
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(
+                        color = MaterialTheme.colorScheme.error,
+                        shape = CircleShape,
+                    ),
+            ) {
+                Icon(
+                    imageVector = OpenLoaderIcons.Warning,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onError,
+                    modifier = Modifier.size(Dimens.iconSizeLarge),
                 )
             }
+            Spacer(modifier = Modifier.width(Dimens.paddingMedium))
+            Text(
+                text = stringResource(R.string.home_setup_required),
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.weight(1f),
+            )
             TextButton(onClick = onConfigure) {
-                Text(stringResource(R.string.home_configure_now))
+                Text(
+                    text = stringResource(R.string.home_configure_now),
+                )
             }
         }
     }
 }
 
 @Composable
-private fun EmptyState(
-    onAddClick: () -> Unit
-) {
+private fun EmptyState(onAddClick: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(32.dp),
+            .padding(Dimens.paddingHuge),
         contentAlignment = Alignment.Center,
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(Dimens.paddingMedium),
         ) {
-            Icon(
-                imageVector = OpenLoaderIcons.Android,
-                contentDescription = null,
-                modifier = Modifier.size(80.dp),
-                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(72.dp)
+                    .background(
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        shape = CircleShape,
+                    ),
+            ) {
+                Icon(
+                    imageVector = OpenLoaderIcons.Android,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.size(36.dp),
+                )
+            }
+            Text(
+                text = stringResource(R.string.home_no_apks),
+                style = MaterialTheme.typography.titleMedium,
             )
             Text(
-                stringResource(R.string.home_no_apks),
-                style = MaterialTheme.typography.titleMedium,
+                text = stringResource(R.string.home_tap_to_add),
+                style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Text(
-                stringResource(R.string.home_tap_to_add),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+            Spacer(modifier = Modifier.height(Dimens.paddingExtraSmall))
+            OlIconTextButton(
+                text = "Add APK Files",
+                icon = OpenLoaderIcons.Add,
+                onClick = onAddClick,
             )
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(onClick = onAddClick) {
-                Icon(OpenLoaderIcons.Add, contentDescription = null)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Add APK Files")
-            }
         }
     }
 }
@@ -582,17 +586,18 @@ private fun ApkQueueItem(
         resolveQueueLabel(context, item)
     }
 
+    val shape = MaterialTheme.shapes.large
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
+        shape = shape,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            containerColor = MaterialTheme.colorScheme.surfaceContainer,
         ),
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .padding(horizontal = Dimens.paddingLarge, vertical = Dimens.paddingMedium),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(
@@ -615,16 +620,17 @@ private fun ApkQueueItem(
                         imageVector = OpenLoaderIcons.Android,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.size(Dimens.iconSizeLarge),
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(Dimens.paddingMedium))
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = label,
-                    style = MaterialTheme.typography.titleSmall,
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Medium,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -645,17 +651,19 @@ private fun ApkQueueItem(
                         QueueStatus.Success -> stringResource(R.string.status_success)
                         QueueStatus.Failed -> item.message ?: stringResource(R.string.status_failed)
                     },
-                    style = MaterialTheme.typography.labelSmall,
+                    style = MaterialTheme.typography.bodySmall,
                     color = when (item.status) {
                         QueueStatus.Pending -> MaterialTheme.colorScheme.onSurfaceVariant
                         QueueStatus.Installing -> MaterialTheme.colorScheme.primary
                         QueueStatus.Success -> MaterialTheme.colorScheme.primary
                         QueueStatus.Failed -> MaterialTheme.colorScheme.error
                     },
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
 
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(Dimens.paddingSmall))
 
             when (item.status) {
                 QueueStatus.Pending -> {
@@ -663,21 +671,21 @@ private fun ApkQueueItem(
                         Icon(
                             imageVector = OpenLoaderIcons.Close,
                             contentDescription = "Remove",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }
                 QueueStatus.Installing -> {
                     CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        strokeWidth = 2.dp
+                        modifier = Modifier.size(Dimens.iconSizeLarge),
+                        strokeWidth = 2.dp,
                     )
                 }
                 QueueStatus.Success -> {
                     Icon(
                         imageVector = OpenLoaderIcons.CheckCircle,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
+                        tint = MaterialTheme.colorScheme.primary,
                     )
                 }
                 QueueStatus.Failed -> {
@@ -705,7 +713,7 @@ private fun ApkQueueItem(
 @Composable
 private fun SetupRequiredDialog(
     onDismiss: () -> Unit,
-    onConfigure: () -> Unit
+    onConfigure: () -> Unit,
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -714,14 +722,16 @@ private fun SetupRequiredDialog(
             Text("You need to configure the install method before installing APKs. Would you like to set it up now?")
         },
         confirmButton = {
-            Button(onClick = onConfigure) {
-                Text(stringResource(R.string.home_configure_now))
-            }
+            OlIconTextButton(
+                text = stringResource(R.string.home_configure_now),
+                onClick = onConfigure,
+            )
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
                 Text(stringResource(R.string.action_cancel))
             }
-        }
+        },
+        shape = MaterialTheme.shapes.extraLarge,
     )
 }

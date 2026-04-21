@@ -57,6 +57,29 @@
     <string name="history_clear_dialog_message">This removes all entries from install history on this device. This cannot be undone.</string>
     <string name="history_clear_confirm">Clear history</string>
 
+    <!-- Duplicate detection -->
+    <string name="home_duplicate_skipped">Already in queue: skipped %d duplicate</string>
+    <string name="home_duplicate_skipped_plural">Already in queue: skipped %d duplicates</string>
+
+    <!-- About -->
+    <string name="about_title">About</string>
+    <string name="about_github">GitHub</string>
+    <string name="about_github_desc">Source &amp; issues</string>
+    <string name="about_version_desc">Current version</string>
+    <string name="about_license">GPL-3.0</string>
+    <string name="about_license_desc">License</string>
+    <string name="about_description">Install APKs on the phone you own, using Shizuku or Wireless ADB. Queue multiple APKs, keep local install history, and sideload on your terms.</string>
+    <string name="about_developer">Lead Developer</string>
+    <string name="about_developer_name">Tamim Hossain</string>
+    <string name="about_developer_role">Lead Developer · The Byte Array</string>
+    <string name="about_developer_bio">Crafting open source tools for Android, one commit at a time.</string>
+    <string name="about_open_source">Open Source</string>
+    <string name="about_contact_email">E-mail</string>
+    <string name="about_contact_github">GitHub</string>
+    <string name="about_contact_org">The Byte Array</string>
+    <string name="about_support">Support the developer</string>
+    <string name="about_support_desc">Star the repo on GitHub to show your appreciation.</string>
+
     <!-- Status -->
     <string name="status_pending">Pending</string>
     <string name="status_installing">Installing</string>

@@ -86,7 +86,8 @@ val AppTypography =
         ),
         bodySmall = baseline.bodySmall.copy(
             fontFamily = bodyFontFamily,
-            fontWeight = FontWeight.Normal
+            fontWeight = FontWeight.Normal,
+            lineHeight = baseline.bodyMedium.lineHeight
         ),
         labelLarge = baseline.labelLarge.copy(
             fontFamily = bodyFontFamily,

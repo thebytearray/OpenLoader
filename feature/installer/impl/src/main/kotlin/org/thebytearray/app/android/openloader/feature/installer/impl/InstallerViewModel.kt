@@ -174,19 +174,43 @@ class InstallerViewModel @Inject constructor(
     fun shizukuPermissionGranted(): Boolean =
         Shizuku.pingBinder() && Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED
 
-    fun addStagedUris(uris: List<android.net.Uri>) {
-        val newItems = uris.map { uri ->
+    /**
+     * Result of staging a batch of URIs. [added] is the count actually appended
+     * to the queue; [skippedDuplicates] is the count ignored because another
+     * queued entry already has the same [QueuedApk.packageName].
+     */
+    data class AddStagedResult(val added: Int, val skippedDuplicates: Int)
+
+    fun addStagedUris(uris: List<android.net.Uri>): AddStagedResult {
+        val existingPackages = _queue.value.mapNotNull { it.packageName }.toHashSet()
+        val seenInBatch = hashSetOf<String>()
+        val newItems = mutableListOf<QueuedApk>()
+        var skipped = 0
+
+        uris.forEach { uri ->
             val file = apkStaging.stageUri(uri)
             val name = uri.lastPathSegment ?: file.name
             val (pkg, label) = ApkArchiveMetadata.read(context, file.absolutePath)
-            QueuedApk(
+
+            val isDuplicate = pkg != null && (pkg in existingPackages || pkg in seenInBatch)
+            if (isDuplicate) {
+                java.io.File(file.absolutePath).delete()
+                skipped++
+                return@forEach
+            }
+            if (pkg != null) seenInBatch += pkg
+
+            newItems += QueuedApk(
                 displayName = name,
                 localPath = file.absolutePath,
                 packageName = pkg,
                 appLabel = label,
             )
         }
-        _queue.value += newItems
+        if (newItems.isNotEmpty()) {
+            _queue.value += newItems
+        }
+        return AddStagedResult(added = newItems.size, skippedDuplicates = skipped)
     }
 
     fun clearQueue() {

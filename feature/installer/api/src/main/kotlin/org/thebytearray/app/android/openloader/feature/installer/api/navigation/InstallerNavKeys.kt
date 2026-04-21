@@ -23,3 +23,6 @@ object SettingsNavKey : NavKey
 
 @Serializable
 object HistoryNavKey : NavKey
+
+@Serializable
+object AboutNavKey : NavKey
