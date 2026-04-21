@@ -67,6 +67,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.LifecycleEventObserver
@@ -652,6 +653,7 @@ fun InstallQueueRoute(
     val queue by viewModel.queue.collectAsStateWithLifecycle()
     val installing by viewModel.installing.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val resources = LocalResources.current
 
     val pickLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenMultipleDocuments(),
@@ -660,9 +662,9 @@ fun InstallQueueRoute(
             val result = viewModel.addStagedUris(uris)
             if (result.skippedDuplicates > 0) {
                 val msg = if (result.skippedDuplicates == 1) {
-                    context.getString(R.string.home_duplicate_skipped, 1)
+                    resources.getString(R.string.home_duplicate_skipped, 1)
                 } else {
-                    context.getString(
+                    resources.getString(
                         R.string.home_duplicate_skipped_plural,
                         result.skippedDuplicates,
                     )

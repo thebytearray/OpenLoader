@@ -55,6 +55,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.LifecycleEventObserver
@@ -164,6 +165,7 @@ fun HomeScreen(
     val wirelessAdbConfigured by viewModel.wirelessAdbConfigured.collectAsStateWithLifecycle()
     val adbWirelessKeysReady by viewModel.adbWirelessKeysReady.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val resources = LocalResources.current
     val alreadyConfiguredToastMessage = stringResource(R.string.home_setup_already_configured)
     val lifecycleOwner = LocalLifecycleOwner.current
     val scope = rememberCoroutineScope()
@@ -180,9 +182,9 @@ fun HomeScreen(
             val result = viewModel.addStagedUris(uris)
             if (result.skippedDuplicates > 0) {
                 val msg = if (result.skippedDuplicates == 1) {
-                    context.getString(R.string.home_duplicate_skipped, 1)
+                    resources.getString(R.string.home_duplicate_skipped, 1)
                 } else {
-                    context.getString(R.string.home_duplicate_skipped_plural, result.skippedDuplicates)
+                    resources.getString(R.string.home_duplicate_skipped_plural, result.skippedDuplicates)
                 }
                 Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
             }
